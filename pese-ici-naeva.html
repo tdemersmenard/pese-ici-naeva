@@ -1,0 +1,537 @@
+<title>Pèse ici Naeva</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600&display=swap">
+<style>
+  /* Layout: one full-screen stage, one mystery button, six escalating states, then the finale takes over. */
+  :root {
+    --bg: #0b0910;
+    --ink: #fdf7ff;
+    --dim: #9b90ad;
+    --pink: #ff2d7e;
+    --gold: #ffcb3d;
+    --violet: #8b5cf6;
+    --cyan: #34e2ff;
+    --display: "Archivo Black", Impact, sans-serif;
+    --body: "Archivo", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    margin: 0;
+    overflow: hidden;
+  }
+
+  #glow {
+    position: fixed;
+    inset: -20%;
+    background: radial-gradient(circle at 50% 60%, rgba(255, 45, 126, 0.28), transparent 58%);
+    opacity: 0.55;
+    transition: opacity 400ms ease, transform 400ms ease, background 600ms ease;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #sky { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 8; }
+
+  #flash {
+    position: fixed;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 9;
+    transition: opacity 520ms ease;
+  }
+
+  .stage {
+    position: relative;
+    z-index: 2;
+    box-sizing: border-box;
+    height: 100%;
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+    padding-inline: 22px;
+    padding-block: 26px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 26px;
+    text-align: center;
+  }
+
+  .from {
+    position: fixed;
+    top: env(safe-area-inset-top, 0px);
+    left: 0;
+    right: 0;
+    z-index: 3;
+    padding: 16px 20px;
+    font-size: 11px;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  .hint {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--dim);
+    max-width: 24ch;
+    margin: 0;
+    min-height: 3em;
+    transition: opacity 160ms ease, transform 160ms ease;
+  }
+
+  .hint.swap { opacity: 0; transform: translateY(5px); }
+
+  .knob {
+    position: relative;
+    width: 190px;
+    height: 190px;
+    max-width: 62vw;
+    max-height: 62vw;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    background: radial-gradient(circle at 35% 28%, #ff6aa5, var(--pink) 45%, #c4155c 100%);
+    box-shadow: 0 16px 0 #8d0c40, 0 22px 50px rgba(255, 45, 126, 0.45);
+    color: #fff;
+    font-family: var(--display);
+    font-size: 21px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: transform 110ms ease, box-shadow 110ms ease, width 260ms ease, height 260ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    animation: breathe 2.6s ease-in-out infinite;
+  }
+
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.035); }
+  }
+
+  .knob:active {
+    transform: translateY(10px) scale(0.97);
+    box-shadow: 0 6px 0 #8d0c40, 0 10px 24px rgba(255, 45, 126, 0.4);
+    animation: none;
+  }
+
+  .knob:focus-visible { outline: 3px solid var(--cyan); outline-offset: 6px; }
+
+  .dots { display: flex; gap: 9px; height: 10px; }
+
+  .dots i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #2e2740;
+    transition: background 200ms ease, transform 200ms ease;
+  }
+
+  .dots i.on { background: var(--gold); transform: scale(1.25); }
+
+  /* ---- finale ---- */
+  .finale {
+    position: fixed;
+    inset: 0;
+    z-index: 7;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 24px;
+    box-sizing: border-box;
+    text-align: center;
+  }
+
+  .finale.on { display: flex; }
+
+  .bigname {
+    font-family: var(--display);
+    font-size: clamp(44px, 15vw, 88px);
+    line-height: 0.88;
+    letter-spacing: -0.02em;
+    margin: 0;
+    background: linear-gradient(100deg, var(--gold), var(--pink), var(--cyan), var(--violet), var(--gold));
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: slide 4s linear infinite, drop 700ms cubic-bezier(.2, 1.5, .4, 1) both;
+  }
+
+  @keyframes slide { to { background-position: 300% 0; } }
+  @keyframes drop {
+    from { transform: scale(0.4) rotate(-8deg); opacity: 0; }
+    to { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  .eighteen {
+    font-family: var(--display);
+    font-size: clamp(70px, 26vw, 140px);
+    line-height: 0.8;
+    margin: 0;
+    color: var(--ink);
+    animation: drop 820ms cubic-bezier(.2, 1.5, .4, 1) 120ms both;
+  }
+
+  .sig {
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin: 6px 0 0;
+    animation: drop 600ms ease 400ms both;
+  }
+
+  .stopper {
+    font-family: var(--body);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 999px;
+    padding: 12px 22px;
+    margin-top: 12px;
+    cursor: pointer;
+    transition: transform 90ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .stopper:active { transform: translateY(2px); }
+  .stopper:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .knob { animation: none; }
+    .bigname, .eighteen, .sig { animation: none; opacity: 1; transform: none; }
+  }
+</style>
+
+<div id="glow"></div>
+<canvas id="sky"></canvas>
+<div id="flash"></div>
+
+<p class="from">TDM · pour Naeva</p>
+
+<div class="stage" id="stage">
+  <p class="hint" id="hint">Pèse sur le bouton.<br>Non, je te dirai pas pourquoi.</p>
+  <button class="knob" id="knob" type="button">Pèse ici</button>
+  <div class="dots" id="dots"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+</div>
+
+<div class="finale" id="finale">
+  <p class="bigname">BONNE FÊTE<br>NAEVA</p>
+  <p class="eighteen">18</p>
+  <p class="sig">De la part de TDM 🤙</p>
+  <button class="stopper" id="soundwarn" type="button" hidden>🔊 Activer le son</button>
+  <button class="stopper" id="stopper" type="button">Arrêter la musique</button>
+</div>
+
+<script>
+  (function () {
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* ---------- confetti ---------- */
+    var canvas = document.getElementById('sky');
+    var ctx = canvas.getContext('2d');
+    var COLORS = ['#ff2d7e', '#ffcb3d', '#34e2ff', '#8b5cf6', '#ffffff', '#35e08a'];
+    var parts = [], W = 0, H = 0, dpr = 1;
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width = Math.floor(W * dpr); canvas.height = Math.floor(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function rand(a, b) { return a + Math.random() * (b - a); }
+    function pick(a) { return a[(Math.random() * a.length) | 0]; }
+
+    function spawn(x, y, vx, vy, big) {
+      parts.push({
+        x: x, y: y, vx: vx, vy: vy,
+        w: big ? rand(8, 16) : rand(5, 10),
+        h: big ? rand(11, 22) : rand(7, 14),
+        color: pick(COLORS), rot: rand(0, 6.28), rs: rand(-0.26, 0.26),
+        tilt: rand(0, 6.28), ts: rand(0.07, 0.18),
+        ribbon: Math.random() < 0.26, drag: rand(0.985, 0.995)
+      });
+      if (parts.length > 900) parts.splice(0, parts.length - 900);
+    }
+
+    function cannon(x, y, n, angle, spread, power, big) {
+      for (var i = 0; i < n; i++) {
+        var a = angle + rand(-spread, spread), s = power * rand(0.55, 1.3);
+        spawn(x, y, Math.cos(a) * s, Math.sin(a) * s, big);
+      }
+    }
+
+    function rain(n) {
+      for (var i = 0; i < n; i++) spawn(rand(-40, W + 40), rand(-140, -10), rand(-0.8, 0.8), rand(1.6, 4), false);
+    }
+
+    function frame() {
+      ctx.clearRect(0, 0, W, H);
+      for (var i = parts.length - 1; i >= 0; i--) {
+        var p = parts[i];
+        p.vy += 0.17; p.vx *= p.drag; p.vy *= p.drag;
+        p.x += p.vx; p.y += p.vy; p.rot += p.rs; p.tilt += p.ts;
+        if (p.y > H + 80 || p.x < -130 || p.x > W + 130) { parts.splice(i, 1); continue; }
+        var f = Math.cos(p.tilt);
+        ctx.save();
+        ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+        ctx.scale(1, Math.max(0.12, Math.abs(f)));
+        ctx.fillStyle = p.color; ctx.globalAlpha = 0.55 + Math.abs(f) * 0.45;
+        if (p.ribbon) ctx.fillRect(-p.w / 4, -p.h, p.w / 2, p.h * 2.2);
+        else ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    /* ---------- music (Web Audio, written here, no files) ---------- */
+    var actx = null, master = null, sfx = null, seqTimer = null, step = 0, playing = false;
+
+    function initAudio() {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      if (!actx) {
+        actx = new AC();
+        master = actx.createGain();
+        master.gain.value = 0.0001;
+        master.connect(actx.destination);
+        sfx = actx.createGain();
+        sfx.gain.value = 0.5;
+        sfx.connect(actx.destination);
+        // unlock on iOS: play one silent buffer inside the gesture
+        var b = actx.createBuffer(1, 1, actx.sampleRate);
+        var s = actx.createBufferSource();
+        s.buffer = b; s.connect(actx.destination); s.start(0);
+      }
+      if (actx.state === 'suspended') actx.resume();
+    }
+
+    function note(freq, time, dur, type, gain, dest) {
+      if (!actx) return;
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.type = type || 'square';
+      o.frequency.setValueAtTime(freq, time);
+      g.gain.setValueAtTime(0.0001, time);
+      g.gain.exponentialRampToValueAtTime(gain || 0.18, time + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+      o.connect(g); g.connect(dest || master);
+      o.start(time); o.stop(time + dur + 0.05);
+    }
+
+    function kick(time) {
+      if (!actx) return;
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(160, time);
+      o.frequency.exponentialRampToValueAtTime(48, time + 0.13);
+      g.gain.setValueAtTime(0.5, time);
+      g.gain.exponentialRampToValueAtTime(0.0001, time + 0.2);
+      o.connect(g); g.connect(master);
+      o.start(time); o.stop(time + 0.25);
+    }
+
+    function hat(time) {
+      if (!actx) return;
+      var len = Math.floor(actx.sampleRate * 0.04);
+      var buf = actx.createBuffer(1, len, actx.sampleRate);
+      var d = buf.getChannelData(0);
+      for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+      var s = actx.createBufferSource(); s.buffer = buf;
+      var f = actx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 7000;
+      var g = actx.createGain(); g.gain.value = 0.09;
+      s.connect(f); f.connect(g); g.connect(master);
+      s.start(time);
+    }
+
+    // C  G  Am F  — bass roots and chord tones
+    var ROOTS = [130.81, 98.00, 110.00, 87.31];
+    var CHORDS = [
+      [261.63, 329.63, 392.00],
+      [246.94, 293.66, 392.00],
+      [261.63, 329.63, 440.00],
+      [261.63, 349.23, 440.00]
+    ];
+    var LEAD = [523.25, 659.25, 783.99, 659.25, 587.33, 783.99, 659.25, 523.25];
+
+    var BPM = 126;
+    var SPB = 60 / BPM / 2; // eighth note
+
+    function tick() {
+      if (!actx) return;
+      var t = actx.currentTime + 0.06;
+      var bar = Math.floor(step / 8) % 4;
+      var s = step % 8;
+
+      if (s === 0 || s === 3 || s === 6) kick(t);
+      hat(t);
+      note(ROOTS[bar], t, 0.18, 'square', 0.16);
+      if (s % 2 === 0) note(CHORDS[bar][(s / 2) % 3], t, 0.16, 'triangle', 0.11);
+      note(LEAD[s] * (bar === 1 ? 0.94 : 1), t, 0.22, 'sawtooth', 0.07);
+
+      step++;
+    }
+
+    function startMusic() {
+      initAudio();
+      if (!actx || playing) return;
+      playing = true;
+      master.gain.cancelScheduledValues(actx.currentTime);
+      master.gain.setValueAtTime(0.0001, actx.currentTime);
+      master.gain.exponentialRampToValueAtTime(0.55, actx.currentTime + 0.5);
+      step = 0;
+      tick();
+      seqTimer = setInterval(tick, SPB * 1000);
+      checkSound();
+    }
+
+    function checkSound() {
+      var warn = document.getElementById('soundwarn');
+      if (!warn) return;
+      warn.hidden = !!(actx && actx.state === 'running');
+    }
+
+    function stopMusic() {
+      if (!actx || !playing) return;
+      playing = false;
+      clearInterval(seqTimer);
+      master.gain.cancelScheduledValues(actx.currentTime);
+      master.gain.setValueAtTime(master.gain.value, actx.currentTime);
+      master.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + 0.6);
+    }
+
+    function blip(freq) {
+      initAudio();
+      if (!actx) return;
+      note(freq, actx.currentTime + 0.01, 0.16, 'square', 0.25, sfx);
+    }
+
+    /* ---------- escalation ---------- */
+    var knob = document.getElementById('knob');
+    var hint = document.getElementById('hint');
+    var glow = document.getElementById('glow');
+    var flash = document.getElementById('flash');
+    var stage = document.getElementById('stage');
+    var finale = document.getElementById('finale');
+    var dots = document.getElementById('dots').children;
+
+    var STEPS = [
+      { hint: "Ok. Encore.", label: "Encore", size: 200, hue: 'rgba(255,45,126,0.32)', puff: 60, freq: 523.25 },
+      { hint: "Il se passe quelque chose.", label: "Encore", size: 212, hue: 'rgba(139,92,246,0.34)', puff: 110, freq: 587.33 },
+      { hint: "Non mais sérieux, arrête pas.", label: "Continue", size: 226, hue: 'rgba(52,226,255,0.34)', puff: 170, freq: 659.25 },
+      { hint: "Là ça devient dangereux.", label: "CONTINUE", size: 242, hue: 'rgba(255,203,61,0.38)', puff: 240, freq: 783.99 },
+      { hint: "Dernière chance de reculer.", label: "PÈSE", size: 262, hue: 'rgba(255,45,126,0.5)', puff: 320, freq: 880.00 },
+      { hint: "", label: "", size: 262, hue: '', puff: 0, freq: 1046.50 }
+    ];
+
+    var n = 0, done = false;
+
+    function setHint(text) {
+      hint.classList.add('swap');
+      setTimeout(function () {
+        hint.innerHTML = text;
+        hint.classList.remove('swap');
+      }, reduced ? 0 : 150);
+    }
+
+    knob.addEventListener('click', function () {
+      if (done) return;
+      var cfg = STEPS[Math.min(n, STEPS.length - 1)];
+      n += 1;
+
+      blip(cfg.freq);
+
+      if (n < STEPS.length) {
+        for (var i = 0; i < dots.length; i++) dots[i].classList.toggle('on', i < n);
+        setHint(cfg.hint);
+        knob.textContent = cfg.label;
+        knob.style.width = cfg.size + 'px';
+        knob.style.height = cfg.size + 'px';
+        glow.style.background = 'radial-gradient(circle at 50% 60%, ' + cfg.hue + ', transparent 58%)';
+        glow.style.opacity = String(0.5 + n * 0.09);
+
+        cannon(W * 0.5, H * 0.62, cfg.puff, -Math.PI / 2, 0.9, 10 + n * 2.4, false);
+        rain(8 + n * 6);
+      } else {
+        bigOne();
+      }
+    });
+
+    function bigOne() {
+      done = true;
+      for (var i = 0; i < dots.length; i++) dots[i].classList.add('on');
+
+      if (!reduced) {
+        flash.style.opacity = '1';
+        setTimeout(function () { flash.style.opacity = '0'; }, 90);
+      }
+
+      stage.style.display = 'none';
+      finale.classList.add('on');
+      glow.style.background = 'radial-gradient(circle at 50% 55%, rgba(255,203,61,0.45), transparent 62%)';
+      glow.style.opacity = '1';
+
+      startMusic();
+      setTimeout(checkSound, 400);
+
+      // the barrage
+      var wave = 0;
+      var t = setInterval(function () {
+        wave++;
+        cannon(rand(W * 0.08, W * 0.92), H * rand(0.5, 0.9), 130, -Math.PI / 2, 1.25, 22, true);
+        cannon(0, H * 0.95, 70, -Math.PI / 3.1, 0.3, 26, true);
+        cannon(W, H * 0.95, 70, -Math.PI + Math.PI / 3.1, 0.3, 26, true);
+        rain(45);
+        if (wave >= 14) clearInterval(t);
+      }, 210);
+
+      // and it keeps snowing after
+      setInterval(function () { if (parts.length < 320) rain(6); }, 380);
+    }
+
+    /* ---------- the stop button that takes its time ---------- */
+    var soundwarn = document.getElementById('soundwarn');
+    soundwarn.addEventListener('click', function () {
+      initAudio();
+      if (actx && actx.state !== 'running' && actx.resume) actx.resume();
+      if (!playing) startMusic();
+      setTimeout(checkSound, 200);
+    });
+
+    var stopper = document.getElementById('stopper');
+    var tries = 0;
+    var EXCUSES = ["Raté", "Presque", "Essaie encore", "Bon, ok. Arrêter pour vrai"];
+
+    stopper.addEventListener('click', function () {
+      tries++;
+      if (tries < 4) {
+        stopper.textContent = EXCUSES[tries - 1];
+        cannon(W * 0.5, H * 0.8, 90, -Math.PI / 2, 1, 18, true);
+        return;
+      }
+      stopMusic();
+      stopper.textContent = "Musique arrêtée 🤙";
+      stopper.disabled = true;
+      stopper.style.opacity = '0.6';
+    });
+  })();
+</script>
